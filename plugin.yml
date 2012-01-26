@@ -1,6 +1,6 @@
 name: setXP
 main: me.ellbristow.setXP.setXP
-version: 1.2
+version: 1.2.1
 author: ellbristow
 description: >
              Set player's experience level
