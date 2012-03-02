@@ -1,16 +1,21 @@
 package me.ellbristow.setXP;
 
-import java.util.logging.Logger;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class setXP extends JavaPlugin {
 	
 	public static setXP plugin;
-	public final Logger logger = Logger.getLogger("Minecraft");
+        public static boolean gotVault = false;
+        public static boolean gotEconomy = false;
+        public static FileConfiguration config;
+        public static double xpPrice;
+        public static double refundPercent;
+        public static vaultBridge vault;
 	
 	@Override
 	public void onDisable() {
@@ -18,6 +23,13 @@ public class setXP extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
+            if (getServer().getPluginManager().isPluginEnabled("Vault")) {
+                gotVault = true;
+                getLogger().info("[Vault] found and hooked!");
+                vault = new vaultBridge(this);
+                gotEconomy = vault.foundEconomy;
+                initConfig();
+            }
 	}
 	
         @Override
@@ -54,9 +66,24 @@ public class setXP extends JavaPlugin {
 					player.sendMessage(ChatColor.RED + "Level must be a number!" );
 					return false;
 				}
+                                if (level > 32767) {
+                                    level = 32767;
+                                }
 				// Good to go!
+                                int oldLevel = player.getLevel();
 				player.setLevel(level);
 				player.sendMessage(ChatColor.GOLD + "XP level set to " + ChatColor.WHITE + player.getLevel());
+                                if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
+                                    if (oldLevel < level) {
+                                        double price = xpPrice*(level-oldLevel);
+                                        vault.economy.withdrawPlayer(player.getName(), price);
+                                        player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                    } else if (oldLevel > level) {
+                                        double price = (xpPrice/100*refundPercent)*(oldLevel-level);
+                                        vault.economy.depositPlayer(player.getName(), price);
+                                        player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(price));
+                                    }
+                                }
 				return true;
 			}
 			else if (args.length == 2) {
@@ -76,8 +103,16 @@ public class setXP extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + "Level must be a number!" );
 						return false;
 					}
+                                        if (player.getLevel() + level > 32767) {
+                                            level = 32767 - player.getLevel();
+                                        }
 					player.setLevel(player.getLevel() + level);
 					player.sendMessage(ChatColor.GOLD + "XP level set to " + ChatColor.WHITE + player.getLevel());
+                                        if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
+                                            double price = xpPrice*level;
+                                            vault.economy.withdrawPlayer(player.getName(), price);
+                                            player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                        }
 					return true;
 				}
 				else {
@@ -109,9 +144,24 @@ public class setXP extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + "Level must be a number!" );
 						return false;
 					}
+                                        if (level > 32767) {
+                                            level = 32767;
+                                        }
 					// Good to go!
+                                        int oldLevel = target.getLevel();
 					target.setLevel(level);
 					player.sendMessage(target.getDisplayName() + ChatColor.GOLD + " is now at XP level " + ChatColor.WHITE + target.getLevel());
+                                        if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
+                                            if (oldLevel < level) {
+                                                double price = xpPrice*(level-oldLevel);
+                                                vault.economy.withdrawPlayer(player.getName(), price);
+                                                player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                            } else if (oldLevel > level) {
+                                                double price = (xpPrice/100*refundPercent)*(oldLevel-level);
+                                                vault.economy.depositPlayer(player.getName(), price);
+                                                player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(price));
+                                            }
+                                        }
 					if (target.isOnline()) {
 						// Target player is online, send message
 						target.sendMessage(player.getDisplayName() + ChatColor.GOLD + " set your XP level to " + ChatColor.WHITE + target.getLevel());
@@ -148,9 +198,17 @@ public class setXP extends JavaPlugin {
 					player.sendMessage(ChatColor.RED + "Level must be a number!" );
 					return false;
 				}
+                                if (target.getLevel() + level > 32767) {
+                                    level = 32767 - target.getLevel();
+                                }
 				// Good to go!
 				target.setLevel(target.getLevel() + level);
 				player.sendMessage(target.getDisplayName() + ChatColor.GOLD + " is now at XP level " + ChatColor.WHITE + target.getLevel());
+                                if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
+                                    double price = xpPrice*level;
+                                    vault.economy.withdrawPlayer(player.getName(), price);
+                                    player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                }
 				if (target.isOnline()) {
 					// Target player is online, send message
 					target.sendMessage(player.getDisplayName() + ChatColor.GOLD + " set your XP level to " + ChatColor.WHITE + target.getLevel());
@@ -268,5 +326,14 @@ public class setXP extends JavaPlugin {
 			return true;
 		}
 	}
+        
+        private void initConfig() {
+            config = getConfig();
+            xpPrice = config.getDouble("price_per_xp_level", 0.0);
+            refundPercent = config.getDouble("reduce_xp_refund_percentage", 100.0);
+            config.set("price_per_xp_level", xpPrice);
+            config.set("reduce_xp_refund_percentage", refundPercent);
+            saveConfig();
+        }
 	
 }
