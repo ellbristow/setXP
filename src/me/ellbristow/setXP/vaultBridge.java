@@ -1,6 +1,5 @@
 package me.ellbristow.setXP;
 
-import java.util.logging.Level;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -24,7 +23,8 @@ public class vaultBridge {
         if (economy != null) {
             foundEconomy = true;
             economyName = plugin.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class).getProvider().getName();
-            plugin.getLogger().info("[Vault] Hooked in to " + economyName + "!");
+            String message = "[Vault] Hooked in to " + economyName + "!";
+            plugin.getLogger().info(message);
         } else {
             plugin.getLogger().info("[Vault] No economy plugin found!");
         }

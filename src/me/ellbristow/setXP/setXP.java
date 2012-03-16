@@ -52,7 +52,19 @@ public class setXP extends JavaPlugin {
 			 */
 			if (args.length == 0) {
 				// No arguments sent, report error
-				player.sendMessage(ChatColor.RED + "No level requested!");
+                            player.sendMessage(ChatColor.GOLD + "== SetXP v" + ChatColor.WHITE + getDescription().getVersion() + ChatColor.GOLD + " by " + ChatColor.WHITE + "ellbristow" + ChatColor.GOLD + " ==");
+                            if (gotVault) {
+                                String eco = "";
+                                if (gotEconomy) {
+                                    eco = " and [" + vault.economyName + "]";
+                                }
+                                player.sendMessage(ChatColor.GOLD + "== Using [Vault]" + eco + " ==");
+                                if (gotEconomy && !player.hasPermission("setxp.free")) {
+                                    player.sendMessage(ChatColor.GOLD + "XP level price : " + vault.economy.format(xpPrice) );
+                                    player.sendMessage(ChatColor.GOLD + "Refunds Given : " + refundPercent + "%" );
+                                }
+                            }
+                            return true;
 			}
 			else if (args.length == 1) {
 				// 1 argument sent, apply level to player 
