@@ -81,19 +81,30 @@ public class setXP extends JavaPlugin {
                                 if (level > 32767) {
                                     level = 32767;
                                 }
-				// Good to go!
                                 int oldLevel = player.getLevel();
+                                double balance = 0;
+                                double cost = 0;
+                                if (gotEconomy) {
+                                    balance = vault.economy.getBalance(player.getName());
+                                    if (oldLevel < level) {
+                                        cost = xpPrice*(level-oldLevel);
+                                    }
+                                }
+                                if (balance < cost) {
+                                    player.sendMessage(ChatColor.RED + "You cannot afford that XP! ("+vault.economy.format(cost)+")" );
+                                    return false;
+                                }
+				// Good to go!
 				player.setLevel(level);
 				player.sendMessage(ChatColor.GOLD + "XP level set to " + ChatColor.WHITE + player.getLevel());
                                 if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
                                     if (oldLevel < level) {
-                                        double price = xpPrice*(level-oldLevel);
-                                        vault.economy.withdrawPlayer(player.getName(), price);
-                                        player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                        vault.economy.withdrawPlayer(player.getName(), cost);
+                                        player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
                                     } else if (oldLevel > level) {
-                                        double price = (xpPrice/100*refundPercent)*(oldLevel-level);
-                                        vault.economy.depositPlayer(player.getName(), price);
-                                        player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(price));
+                                        cost = (xpPrice/100*refundPercent)*(oldLevel-level);
+                                        vault.economy.depositPlayer(player.getName(), cost);
+                                        player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(cost));
                                     }
                                 }
 				return true;
@@ -118,12 +129,21 @@ public class setXP extends JavaPlugin {
                                         if (player.getLevel() + level > 32767) {
                                             level = 32767 - player.getLevel();
                                         }
+                                        double balance = 0;
+                                        double cost = 0;
+                                        if (gotEconomy) {
+                                            balance = vault.economy.getBalance(player.getName());
+                                            cost = xpPrice*level;
+                                        }
+                                        if (balance < cost) {
+                                            player.sendMessage(ChatColor.RED + "You cannot afford that XP! ("+vault.economy.format(cost)+")" );
+                                            return false;
+                                        }
 					player.setLevel(player.getLevel() + level);
 					player.sendMessage(ChatColor.GOLD + "XP level set to " + ChatColor.WHITE + player.getLevel());
                                         if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
-                                            double price = xpPrice*level;
-                                            vault.economy.withdrawPlayer(player.getName(), price);
-                                            player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                            vault.economy.withdrawPlayer(player.getName(), cost);
+                                            player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
                                         }
 					return true;
 				}
@@ -159,19 +179,30 @@ public class setXP extends JavaPlugin {
                                         if (level > 32767) {
                                             level = 32767;
                                         }
+                                        int oldLevel = player.getLevel();
+                                        double balance = 0;
+                                        double cost = 0;
+                                        if (gotEconomy) {
+                                            balance = vault.economy.getBalance(player.getName());
+                                            if (oldLevel < level) {
+                                                cost = xpPrice*(level-oldLevel);
+                                            }
+                                        }
+                                        if (balance < cost) {
+                                            player.sendMessage(ChatColor.RED + "You cannot afford that XP! ("+vault.economy.format(cost)+")" );
+                                            return false;
+                                        }
 					// Good to go!
-                                        int oldLevel = target.getLevel();
 					target.setLevel(level);
 					player.sendMessage(target.getDisplayName() + ChatColor.GOLD + " is now at XP level " + ChatColor.WHITE + target.getLevel());
                                         if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
                                             if (oldLevel < level) {
-                                                double price = xpPrice*(level-oldLevel);
-                                                vault.economy.withdrawPlayer(player.getName(), price);
-                                                player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                                vault.economy.withdrawPlayer(player.getName(), cost);
+                                                player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
                                             } else if (oldLevel > level) {
-                                                double price = (xpPrice/100*refundPercent)*(oldLevel-level);
-                                                vault.economy.depositPlayer(player.getName(), price);
-                                                player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(price));
+                                                cost = (xpPrice/100*refundPercent)*(oldLevel-level);
+                                                vault.economy.depositPlayer(player.getName(), cost);
+                                                player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(cost));
                                             }
                                         }
 					if (target.isOnline()) {
@@ -213,13 +244,22 @@ public class setXP extends JavaPlugin {
                                 if (target.getLevel() + level > 32767) {
                                     level = 32767 - target.getLevel();
                                 }
+                                double balance = 0;
+                                double cost = 0;
+                                if (gotEconomy) {
+                                    balance = vault.economy.getBalance(player.getName());
+                                    cost = xpPrice*level;
+                                }
+                                if (balance < cost) {
+                                    player.sendMessage(ChatColor.RED + "You cannot afford that XP! ("+vault.economy.format(cost)+")" );
+                                    return false;
+                                }
 				// Good to go!
 				target.setLevel(target.getLevel() + level);
 				player.sendMessage(target.getDisplayName() + ChatColor.GOLD + " is now at XP level " + ChatColor.WHITE + target.getLevel());
                                 if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
-                                    double price = xpPrice*level;
-                                    vault.economy.withdrawPlayer(player.getName(), price);
-                                    player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(price));
+                                    vault.economy.withdrawPlayer(player.getName(), cost);
+                                    player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
                                 }
 				if (target.isOnline()) {
 					// Target player is online, send message
