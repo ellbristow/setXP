@@ -406,9 +406,9 @@ public class setXP extends JavaPlugin implements Listener {
             if (!forceMaxLevel) return;
             if (event.getNewLevel() > maxLevel) {
                 Player player = event.getPlayer();
-                player.setExp(player.getExp()-1);
+                player.setExp(1f);
                 player.setLevel(maxLevel);
-            }
+            } 
         }
         
 }
