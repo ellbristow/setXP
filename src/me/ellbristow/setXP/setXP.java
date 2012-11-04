@@ -5,17 +5,22 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLevelChangeEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class setXP extends JavaPlugin {
+public class setXP extends JavaPlugin implements Listener {
 	
-	public static setXP plugin;
-        public static boolean gotVault = false;
-        public static boolean gotEconomy = false;
-        public static FileConfiguration config;
-        public static double xpPrice;
-        public static double refundPercent;
-        public static vaultBridge vault;
+        private static boolean gotVault = false;
+        private static boolean gotEconomy = false;
+        private static FileConfiguration config;
+        private static double xpPrice;
+        private static double refundPercent;
+        private static vaultBridge vault;
+        private  int maxLevel;
+        private boolean forceMaxLevel;
 	
 	@Override
 	public void onDisable() {
@@ -28,8 +33,9 @@ public class setXP extends JavaPlugin {
                 getLogger().info("[Vault] found and hooked!");
                 vault = new vaultBridge(this);
                 gotEconomy = vault.foundEconomy;
-                initConfig();
             }
+            initConfig();
+            getServer().getPluginManager().registerEvents(this, this);
 	}
 	
         @Override
@@ -45,7 +51,7 @@ public class setXP extends JavaPlugin {
 		}
 	}
 	
-	public boolean readCommand(Player player, String command, String[] args) {
+	private boolean readCommand(Player player, String command, String[] args) {
 		if(command.equalsIgnoreCase("setxp")) {
 			/*
 			 *  Set XP level
@@ -78,8 +84,8 @@ public class setXP extends JavaPlugin {
 					player.sendMessage(ChatColor.RED + "Level must be a number!" );
 					return false;
 				}
-                                if (level > 32767) {
-                                    level = 32767;
+                                if (level > maxLevel) {
+                                    level = maxLevel;
                                 }
                                 int oldLevel = player.getLevel();
                                 double balance = 0;
@@ -126,8 +132,8 @@ public class setXP extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + "Level must be a number!" );
 						return false;
 					}
-                                        if (player.getLevel() + level > 32767) {
-                                            level = 32767 - player.getLevel();
+                                        if (player.getLevel() + level > maxLevel) {
+                                            level = maxLevel - player.getLevel();
                                         }
                                         double balance = 0;
                                         double cost = 0;
@@ -176,8 +182,8 @@ public class setXP extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + "Level must be a number!" );
 						return false;
 					}
-                                        if (level > 32767) {
-                                            level = 32767;
+                                        if (level > maxLevel) {
+                                            level = maxLevel;
                                         }
                                         int oldLevel = player.getLevel();
                                         double balance = 0;
@@ -241,8 +247,8 @@ public class setXP extends JavaPlugin {
 					player.sendMessage(ChatColor.RED + "Level must be a number!" );
 					return false;
 				}
-                                if (target.getLevel() + level > 32767) {
-                                    level = 32767 - target.getLevel();
+                                if (target.getLevel() + level > maxLevel) {
+                                    level = maxLevel - target.getLevel();
                                 }
                                 double balance = 0;
                                 double cost = 0;
@@ -291,7 +297,7 @@ public class setXP extends JavaPlugin {
 		return false;
 	}
 	
-	public boolean consoleCommand(CommandSender sender, String command, String[] args) {
+	private boolean consoleCommand(CommandSender sender, String command, String[] args) {
 		if (command.equalsIgnoreCase("getxp")) {
 			/*
 			 * Fetch XP level of target player
@@ -383,9 +389,26 @@ public class setXP extends JavaPlugin {
             config = getConfig();
             xpPrice = config.getDouble("price_per_xp_level", 0.0);
             refundPercent = config.getDouble("reduce_xp_refund_percentage", 100.0);
+            maxLevel = config.getInt("max_level", 32767);
+            forceMaxLevel = config.getBoolean("force_max_level", false);
+            if (maxLevel > 32767) {
+                maxLevel = 32767;
+            }
             config.set("price_per_xp_level", xpPrice);
             config.set("reduce_xp_refund_percentage", refundPercent);
+            config.set("max_level", maxLevel);
+            config.set("force_max_level", forceMaxLevel);
             saveConfig();
         }
 	
+        @EventHandler (priority = EventPriority.NORMAL)
+        public void onLevel(PlayerLevelChangeEvent event) {
+            if (!forceMaxLevel) return;
+            if (event.getNewLevel() > maxLevel) {
+                Player player = event.getPlayer();
+                player.setExp(player.getExp()-1);
+                player.setLevel(maxLevel);
+            }
+        }
+        
 }
