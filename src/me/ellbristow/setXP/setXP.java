@@ -168,6 +168,9 @@ public class setXP extends JavaPlugin implements Listener {
 						player.sendMessage(ChatColor.RED + "Level must be a number!" );
 						return false;
 					}
+                                        if (level > player.getLevel()) {
+                                            level = player.getLevel();
+                                        }
                                         double refund = 0;
                                         if (gotEconomy && xpPrice != 0 && refundPercent != 0) {
                                             refund = xpPrice*refundPercent*level;
@@ -328,6 +331,9 @@ public class setXP extends JavaPlugin implements Listener {
 					player.sendMessage(ChatColor.RED + "Level must be a number!" );
 					return false;
 				}
+                                if (level > target.getLevel()) {
+                                    level = target.getLevel();
+                                }
                                 double refund = 0;
                                 if (gotEconomy && xpPrice != 0 && refundPercent != 0) {
                                     refund = xpPrice*refundPercent*level;
