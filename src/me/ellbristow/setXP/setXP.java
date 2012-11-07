@@ -74,7 +74,7 @@ public class setXP extends JavaPlugin implements Listener {
 			}
 			else if (args.length == 1) {
 				// 1 argument sent, apply level to player 
-				int level = player.getLevel();
+				int level;
 				// Check that level is an integer
 				try {
 					level = Integer.parseInt(args[0]);
@@ -152,9 +152,35 @@ public class setXP extends JavaPlugin implements Listener {
                                             player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
                                         }
 					return true;
-				}
-				else {
-					// SET level or another player
+				} else if (args[0].equalsIgnoreCase("remove")) {
+					// Remove levels from self
+					if (!player.hasPermission("setxp.remove")) {
+						player.sendMessage(ChatColor.RED + "You do not have permission to remove from your XP level!");
+						return true;
+					}
+					int level;
+					// Check that level is an integer
+					try {
+						level = Integer.parseInt(args[1]);
+					}
+					catch(NumberFormatException nfe) {
+						// Failed. Number not an integer
+						player.sendMessage(ChatColor.RED + "Level must be a number!" );
+						return false;
+					}
+                                        double refund = 0;
+                                        if (gotEconomy && xpPrice != 0 && refundPercent != 0) {
+                                            refund = xpPrice*refundPercent*level;
+                                        }
+					player.setLevel(player.getLevel() - level);
+					player.sendMessage(ChatColor.GOLD + "XP level set to " + ChatColor.WHITE + player.getLevel());
+                                        if (gotVault && gotEconomy && refund != 0 && !player.hasPermission("setxp.free")) {
+                                            vault.economy.depositPlayer(player.getName(), refund);
+                                            player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(refund));
+                                        }
+					return true;
+				} else {
+					// SET level of another player
 					Player target = getServer().getPlayer(args[0]);
 					// Check permission to set other players' level
 					if (!player.hasPermission("setxp.setxp.others") && !player.isOp()) {
@@ -266,6 +292,52 @@ public class setXP extends JavaPlugin implements Listener {
                                 if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
                                     vault.economy.withdrawPlayer(player.getName(), cost);
                                     player.sendMessage(ChatColor.GOLD + "You were charged " + vault.economy.format(cost));
+                                }
+				if (target.isOnline()) {
+					// Target player is online, send message
+					target.sendMessage(player.getDisplayName() + ChatColor.GOLD + " set your XP level to " + ChatColor.WHITE + target.getLevel());
+				}
+				return true;
+			}
+			else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
+				// 2 arguments sent, apply level to another player
+				Player target = getServer().getPlayer(args[1]);
+				// Check permission to set other players' level
+				if (!player.hasPermission("setxp.remove.others") && !player.isOp()) {
+					player.sendMessage(ChatColor.RED + "You do not have permission to remove from another player's XP level!");
+					return true;
+				}
+				// Check target player exists
+				if (target == null) {
+					// Target player not found 
+					player.sendMessage(ChatColor.RED + "Player " + ChatColor.WHITE + args[1] + ChatColor.RED + " not found or not online!");
+					return false;
+				}
+				// Check if target layer is exempt from setXP
+				if (target.hasPermission("setxp.exempt") && !player.hasPermission("setxp.override")) {
+					player.sendMessage(target.getDisplayName() + ChatColor.RED + " is exempt from setXP!");
+					return true;
+				}
+				int level;
+				// Check that level is an integer
+				try {
+					level = Integer.parseInt(args[2]);
+				}
+				catch(NumberFormatException nfe) {
+					// Failed. Number not an integer
+					player.sendMessage(ChatColor.RED + "Level must be a number!" );
+					return false;
+				}
+                                double refund = 0;
+                                if (gotEconomy && xpPrice != 0 && refundPercent != 0) {
+                                    refund = xpPrice*refundPercent*level;
+                                }
+				// Good to go!
+				target.setLevel(target.getLevel() - level);
+				player.sendMessage(target.getDisplayName() + ChatColor.GOLD + " is now at XP level " + ChatColor.WHITE + target.getLevel());
+                                if (gotVault && gotEconomy && xpPrice != 0 && !player.hasPermission("setxp.free")) {
+                                    vault.economy.withdrawPlayer(player.getName(), refund);
+                                    player.sendMessage(ChatColor.GOLD + "You were refunded " + vault.economy.format(refund));
                                 }
 				if (target.isOnline()) {
 					// Target player is online, send message
