@@ -1,5 +1,6 @@
 package me.ellbristow.setXP;
 
+import java.io.IOException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -36,6 +37,14 @@ public class setXP extends JavaPlugin implements Listener {
             }
             initConfig();
             getServer().getPluginManager().registerEvents(this, this);
+            
+            try {
+                Metrics metrics = new Metrics(this);
+                metrics.start();
+            } catch (IOException e) {
+                // Failed to submit the stats :-(
+            }
+            
 	}
 	
         @Override
